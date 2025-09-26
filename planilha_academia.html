@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Controle de Itens</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    table { border-collapse: collapse; width: 70%; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #f2f2f2; }
+    input[type="number"], input[type="month"] { width: 120px; }
+    .controls { margin-top: 12px; }
+    button { margin-right: 8px; }
+  </style>
+</head>
+<body>
+
+  <h1>Planilha de Itens (Item / Quantidade / Mês)</h1>
+
+  <form id="formAdd" onsubmit="return false;">
+    <label>
+      Item:
+      <input type="text" id="itemInput" placeholder="Ex: Papel Toalha" required>
+    </label>
+    &nbsp;
+    <label>
+      Quantidade:
+      <input type="number" id="qtdInput" min="0" value="1" required>
+    </label>
+    &nbsp;
+    <label>
+      Mês:
+      <input type="month" id="mesInput" required>
+    </label>
+    &nbsp;
+    <button id="btnAdd">Adicionar</button>
+  </form>
+
+  <table id="tabela">
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Quantidade</th>
+        <th>Mês</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+
+    </tbody>
+  </table>
+
+  <div class="controls">
+    <button id="btnExport">Baixar como CSV (abre no Excel)</button>
+    <button id="btnClear">Limpar tabela</button>
+  </div>
+
+  <script>
+    const tabelaBody = document.querySelector('#tabela tbody');
+    const itemInput = document.getElementById('itemInput');
+    const qtdInput = document.getElementById('qtdInput');
+    const mesInput = document.getElementById('mesInput');
+    const btnAdd = document.getElementById('btnAdd');
+    const btnExport = document.getElementById('btnExport');
+    const btnClear = document.getElementById('btnClear');
+
+    function adicionarLinha(item, quantidade, mes) {
+      const tr = document.createElement('tr');
+
+      const tdItem = document.createElement('td');
+      tdItem.textContent = item;
+      tr.appendChild(tdItem);
+
+      const tdQtd = document.createElement('td');
+      tdQtd.textContent = quantidade;
+      tr.appendChild(tdQtd);
+
+      const tdMes = document.createElement('td');
+      tdMes.textContent = mes;
+      tr.appendChild(tdMes);
+
+      const tdAcoes = document.createElement('td');
+      const btnRem = document.createElement('button');
+      btnRem.textContent = 'Remover';
+      btnRem.type = 'button';
+      btnRem.addEventListener('click', () => tr.remove());
+      tdAcoes.appendChild(btnRem);
+      tr.appendChild(tdAcoes);
+
+      tabelaBody.appendChild(tr);
+    }
+
+    btnAdd.addEventListener('click', () => {
+      const item = itemInput.value.trim();
+      const qtd = qtdInput.value;
+      const mes = mesInput.value;
+      if (!item) return alert('Digite o nome do item.');
+      adicionarLinha(item, qtd, mes);
+      itemInput.value = '';
+      qtdInput.value = 1;
+      mesInput.value = '';
+      itemInput.focus();
+    });
+
+    function exportTableToCSV(filename = 'planilha_itens.csv') {
+      const rows = Array.from(tabelaBody.querySelectorAll('tr'));
+      const lines = [];
+      lines.push(['Item','Quantidade','Mês'].join(';'));
+      for (const row of rows) {
+        const cols = row.querySelectorAll('td');
+        const item = cols[0].textContent.replace(/"/g, '""');
+        const qtd = cols[1].textContent;
+        const mes = cols[2].textContent;
+        lines.push(`"${item}";${qtd};${mes}`);
+      }
+      const csvContent = lines.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    btnExport.addEventListener('click', () => {
+      exportTableToCSV();
+    });
+
+    btnClear.addEventListener('click', () => {
+      if (confirm('Limpar toda a tabela?')) {
+        tabelaBody.innerHTML = '';
+      }
+    });
+
+    adicionarLinha('Papel Toalha', 1, '2025-09');
+    adicionarLinha('Papel Higiênico', 1, '2025-09');
+    adicionarLinha('Café', 1, '2025-09');
+  </script>
+</body>
+</html>
